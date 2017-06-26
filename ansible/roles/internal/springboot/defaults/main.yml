@@ -1,0 +1,14 @@
+---
+springboot_package_version:      master
+# either springboot_package_url or springboot_package_jar must be defined
+#springboot_package_url:         file:///vagrant/springboot
+springboot_package_subdirectory: ""
+#springboot_package_jar:         "/vagrant/springboot-{{ springboot_package_version }}.jar"
+#springboot_application_version:  0.1.0
+springboot_application_name:     springboot
+springboot_application_address:  0.0.0.0
+springboot_application_port:     8080
+springboot_user:                 springboot
+springboot_uid:                  990
+springboot_group:                springboot
+springboot_gid:                  990

@@ -1,0 +1,192 @@
+---
+- name: assert that either package source directory or jar is provided
+  assert:
+    that:
+      - ((springboot_package_url is defined or springboot_package_jar is defined) or 
+        (not (springboot_package_url is defined and springboot_package_jar is defined)))
+    msg: "define only of springboot_package_url or springboot_package_jar"
+
+- name: assert that package subdirectory is undefined when jar provided
+  assert:
+    that:
+      - ((springboot_package_jar is defined and springboot_package_subdirectory is undefined) or springboot_package_url)
+    msg: "must not define springboot_package_subdirectory when jar is provided"
+
+- name: assert that application version is defined only when building from source
+  assert:
+    that:
+      - ((springboot_package_jar is defined and springboot_application_version is undefined) or
+        ((springboot_package_url is defined and springboot_application_version is defined and springboot_package_version is defined)))
+    msg: "must not define springboot_application_version when jar is provided"
+
+- name: set fact springboot app installation directory root when building from source
+  set_fact:
+    fact_springboot_app_installation_directory_root: "/opt/{{ springboot_package_url | basename }}-{{ springboot_package_version }}"
+  when: springboot_package_url is defined
+
+- name: set fact springboot app installation directory when building from source in the directory root
+  set_fact:
+    fact_springboot_app_installation_directory: "{{ fact_springboot_app_installation_directory_root }}"
+  when: (springboot_package_url is defined and springboot_package_subdirectory is undefined)
+
+- name: set fact springboot app installation directory when building from source and package subdirectory provided
+  set_fact:
+    fact_springboot_app_installation_directory: "{{ fact_springboot_app_installation_directory_root }}/{{ springboot_package_subdirectory }}"
+  when: (springboot_package_url is defined and springboot_package_subdirectory is defined)
+
+- name: set fact springboot app installation directory when jar provided
+  set_fact:
+    fact_springboot_app_installation_directory: "/opt/{{ springboot_package_jar | basename | splitext | first }}"
+  when: springboot_package_jar is defined
+
+- name: set fact springboot app deployment directory when building from source
+  set_fact:
+    fact_springboot_app_deployment_directory: "{{ fact_springboot_app_installation_directory }}/build/libs"
+  when: springboot_package_url is defined
+
+- name: set fact springboot app deployment directory when jar provided
+  set_fact:
+    fact_springboot_app_deployment_directory: "{{ fact_springboot_app_installation_directory }}"
+  when: springboot_package_jar is defined
+
+- name: set fact springboot app jar file when building from source
+  set_fact:
+    fact_springboot_app_jar_file: "{{ fact_springboot_app_deployment_directory }}/{{ springboot_application_name }}-{{ springboot_application_version }}.jar"
+  when: springboot_package_url is defined
+
+- name: set fact springboot app jar file when jar provided
+  set_fact:
+    fact_springboot_app_jar_file: "{{ fact_springboot_app_deployment_directory }}/{{ springboot_package_jar | basename }}"
+  when: springboot_package_jar is defined
+
+- name: create springboot group
+  become: yes
+  group:
+    name:   "{{ springboot_group }}"
+    gid:    "{{ springboot_gid }}"
+    state:  present
+    system: yes
+
+- name: create springboot user
+  become: yes
+  user:
+    createhome: no
+    comment:    "{{ springboot_user }}"
+    group:      "{{ springboot_group }}"
+    name:       "{{ springboot_user }}"
+    system:     yes
+    uid:        "{{ springboot_uid }}"
+
+- name: install git package
+  become: yes
+  package:
+    name:  git
+    state: present
+  when: (springboot_package_url is defined and (not springboot_package_url | match("file://.*")))
+
+- name: fetch springboot app github repo under /opt
+  become: yes
+  git:
+    repo:  "{{ springboot_package_url }}"
+    dest:  "{{ fact_springboot_app_installation_directory_root }}"
+    force: yes
+  when: (springboot_package_url is defined and (not (springboot_package_url | match("file://.*"))))
+
+- name: install rsync package
+  become: yes
+  package:
+    name:  rsync
+    state: present
+  when: (springboot_package_url is defined and (springboot_package_url | match("file://.*")))
+
+- name: copy springboot app directory under /opt
+  become: yes
+  synchronize:
+    src:  "{{ springboot_package_url | regex_replace('file://') }}/"
+    dest: "{{ fact_springboot_app_installation_directory_root }}"
+  when: (springboot_package_url is defined and (springboot_package_url | match("file://.*")))
+
+# https://docs.spring.io/spring-boot/docs/current/reference/html/deployment-install.html
+- name: modify build.gradle to create 'fully executable' jar
+  become: yes
+  blockinfile:
+    path:   "{{ fact_springboot_app_installation_directory }}/build.gradle"
+    block:  |
+      springBoot {
+          executable = true
+      }
+    state:  present
+    marker: "// MODIFIED BY ANSIBLE"
+  when: springboot_package_url is defined
+  register: build_gradle_fully_executable_jar
+
+# https://moelholm.com/2017/02/06/spring-boot-prometheus-actuator-endpoint/
+- name: modify build.gradle to instrument the app with prometheus
+  become: yes
+  blockinfile:
+    path:   "{{ fact_springboot_app_installation_directory }}/build.gradle"
+    block:  |
+      dependencies {
+      compile("com.moelholm:prometheus-spring-boot-starter:1.0.1")
+      }
+    state:  present
+    insertbefore: "compile"
+    marker: "// MODIFIED BY ANSIBLE"
+  when: springboot_package_url is defined
+  register: build_gradle_instrument_with_prometheus
+
+- name: "gradle build springboot"
+  become: yes
+  command: /usr/local/bin/gradle clean build
+  args:
+    chdir:   "{{ fact_springboot_app_installation_directory }}"
+    creates: "{{ fact_springboot_app_jar_file }}" 
+  when: springboot_package_url is defined and (build_gradle_fully_executable_jar.changed or build_gradle_instrument_with_prometheus.changed)
+  notify:
+    - "restart springboot service"
+
+- name: create springboot app installation directory when jar provided
+  become: yes
+  file:
+    path:  "{{ fact_springboot_app_installation_directory }}"
+    state: directory
+  when: springboot_package_jar is defined
+
+- name: copy springboot app jar to the installation directory
+  become: yes
+  copy:
+    src:  "{{ springboot_package_jar }}"
+    dest: "{{ fact_springboot_app_installation_directory }}"
+  when: springboot_package_jar is defined
+
+- name: deploy application.properties file
+  become: yes
+  template:
+    src:  application.properties.j2
+    dest: "{{ fact_springboot_app_deployment_directory }}/application.properties"
+  notify:
+    - "restart springboot service"
+
+- name: change owner of the app directory
+  become: yes
+  file:
+    path:    "{{ fact_springboot_app_installation_directory }}"
+    owner:   "{{ springboot_user }}"
+    group:   "{{ springboot_group }}"
+    recurse: yes
+
+- name: make the app jar executable
+  become: yes
+  file:
+    path: "{{ fact_springboot_app_jar_file }}" 
+    mode: "u+x"
+
+- name: install springboot service
+  become: yes
+  template:
+    src:   springboot.service.j2
+    dest:  "/usr/lib/systemd/system/{{ springboot_application_name }}.service"
+    owner: "{{ springboot_user }}"
+    group: "{{ springboot_group }}"
+  notify:
+    - "restart springboot service"

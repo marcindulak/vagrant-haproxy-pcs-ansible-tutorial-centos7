@@ -1,0 +1,36 @@
+---
+- name: set fact gradle archive path
+  set_fact:
+    fact_gradle_archive_path: "/opt/{{ gradle_package_url | basename }}"
+
+- name: set fact gradle installation directory
+  set_fact:
+    # /opt/gradle-X.Y-bin.zip -> /opt/gradle-X.Y
+    fact_gradle_installation_directory: "{{ fact_gradle_archive_path | splitext | first | regex_replace('-bin') }}"
+
+- name: download gradle package under /opt
+  become: yes
+  get_url:
+    url:      "{{ gradle_package_url }}"
+    dest:     "{{ fact_gradle_archive_path }}"
+    #checksum: sha256:# Gradle does not provide download checksums! https://discuss.gradle.org/t/where-can-i-find-distribution-checksums
+  
+- name: install unzip package
+  become: yes
+  package:
+    name:  unzip
+    state: present
+
+- name: extract grade archive under /opt
+  become: yes
+  unarchive:
+    src:        "{{ fact_gradle_archive_path }}"
+    dest:       "/opt"
+    remote_src: yes
+
+- name: link gradle executable under /usr/local/bin
+  become: yes
+  file:
+    src:   "{{ fact_gradle_installation_directory }}/bin/gradle"
+    dest:  "/usr/local/bin/gradle"
+    state: link

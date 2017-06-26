@@ -1,0 +1,12 @@
+---
+- name: install java package
+  become: yes
+  package:
+    name:  "{{ java_package_name }}"
+    state: present
+
+- name: install java devel package
+  become: yes
+  package:
+    name:  "{{ java_devel_package_name }}"
+    state: present

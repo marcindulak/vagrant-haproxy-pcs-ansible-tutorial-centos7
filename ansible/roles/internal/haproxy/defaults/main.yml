@@ -1,0 +1,3 @@
+---
+haproxy_package_name:  haproxy
+haproxy_frontend_port: 80

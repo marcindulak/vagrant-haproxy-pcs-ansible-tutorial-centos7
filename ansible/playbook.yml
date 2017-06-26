@@ -1,0 +1,65 @@
+- hosts: app
+  vars:
+    java_package_name:               java-1.8.0-openjdk
+    java_devel_package_name:         java-1.8.0-openjdk-devel
+    springboot_package_version:      b2add941bd3bddcffcf725eedb678486a9bf6bd7
+    springboot_package_url:          https://github.com/spring-guides/gs-spring-boot
+    springboot_package_subdirectory: complete
+    #springboot_package_jar:         "/vagrant/gs-spring-boot-{{ springboot_package_version }}.jar"
+    springboot_application_version:  0.1.0
+    springboot_application_name:     gs-spring-boot
+    springboot_application_address:  "{{ ipaddress }}"
+    springboot_application_port:     8080
+    springboot_user:                 springboot
+    springboot_uid:                  990
+    springboot_group:                springboot
+    springboot_gid:                  990
+    node_exporter_package_name:      node_exporter
+  roles:
+    - role: internal/gradle
+    - role: internal/java
+    - role: internal/springboot
+    - role: internal/node_exporter
+
+- hosts: lb
+  vars:
+    haproxy_package_name:           haproxy
+    haproxy_frontend_port:          80
+    haproxy_backend_port:           8080
+    node_exporter_package_name:     node_exporter
+    # packamaker/corosync vars
+    pacemaker_ansible_group:        lb
+    pacemaker_password:             secret
+    pacemaker_ring0_addr:           ansible_all_ipv4_addresses
+    pacemaker_ring0_addr_interface: 1
+    pacemaker_cluster_name:         loadbalancer
+    pacemaker_properties:
+      stonith_enabled: "false"
+    pacemaker_resources:
+      - id:      virtual-ip
+        type:    "ocf:heartbeat:IPaddr2"
+        options:
+          ip:           192.168.123.20  # this is the Virtual IP
+          cidr_netmask: 24
+        op:
+          - action:  monitor
+            options:
+              interval: 5s
+  roles:
+    - role: internal/haproxy
+    - role: internal/node_exporter
+    - { role: external/styopa.pacemaker, become: yes }
+
+- hosts: mgt
+  vars:
+    prometheus_package_name:        prometheus
+    prometheus_application_name:    springboot
+    prometheus_application_port:    8080
+    node_exporter_package_name:     node_exporter
+    apache_package_name:            httpd
+    apache_backend_server_host:     loadbalancer
+    apache_backend_server_port:     80
+  roles:
+    - role: internal/prometheus
+    - role: internal/node_exporter
+    - role: internal/apache

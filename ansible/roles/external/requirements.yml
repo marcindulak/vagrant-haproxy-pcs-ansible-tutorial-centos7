@@ -1,0 +1,15 @@
+# http://docs.ansible.com/ansible/galaxy.html
+# ansible-galaxy install --roles-path . -r requirements.yml
+
+# A mess on EL7: ansible error messages get written as filenames ...
+#- src:     https://github.com/pellepelster/ansible-springboot-role
+#  version: 4b742378e21c18f610b094f61bd557f6947f185b
+
+# Well, this looks like a secret fork of https://github.com/pellepelster/ansible-springboot-role modified slightly
+#- src:     https://github.com/remyma/ansible-springboot
+#  version: b1c1c0d86a44feca3c865890489eebcd42a6acca
+
+# Fork of https://galaxy.ansible.com/styopa/pacemaker/
+- src:     https://github.com/marcindulak/ansible-pacemaker
+  version: master
+  name:    styopa.pacemaker

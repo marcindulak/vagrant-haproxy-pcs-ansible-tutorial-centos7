@@ -1,0 +1,38 @@
+---
+- name: install haproxy package
+  become: yes
+  package:
+    name:  "{{ haproxy_package_name }}"
+    state: present
+
+- name: deploy haproxy.cfg file
+  become: yes
+  template:
+    src:  haproxy.cfg.j2
+    dest: "/etc/haproxy/haproxy.cfg"
+  notify:
+    - "restart haproxy service"
+
+- name: install rsyslog package
+  become: yes
+  package:
+    name:  rsyslog
+    state: present
+
+- name: configure haproxy.conf for rsyslog
+  become: yes
+  template:
+    src:  haproxy.conf.j2
+    dest: "/etc/rsyslog.d/haproxy.conf"
+  notify:
+    - "restart rsyslog service"
+    - "restart haproxy service"
+
+- name: start and enable haproxy service
+  become: yes
+  service:
+    name:    "{{ haproxy_package_name }}"
+    state:   started
+    enabled: true
+  notify:
+    - "restart haproxy service"

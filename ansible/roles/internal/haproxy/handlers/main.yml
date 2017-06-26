@@ -1,0 +1,16 @@
+---
+- name: "restart haproxy service"
+  become: yes
+  systemd:
+    name:          "{{ haproxy_package_name }}"
+    enabled:       yes
+    daemon-reload: yes
+    state:         restarted
+
+- name: "restart rsyslog service"
+  become: yes
+  systemd:
+    name:          rsyslog
+    enabled:       yes
+    daemon-reload: yes
+    state:         restarted
