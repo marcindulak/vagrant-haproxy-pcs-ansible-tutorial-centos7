@@ -4,7 +4,7 @@ Description
 
 An example of a https://projects.spring.io/spring-boot/ stateless web-application deployed using `vagrant` and `virtualbox`.
 
-The setup consists of three application `app` servers, two higly-available http://www.haproxy.org/ load-balancers `lb`, and a management server.
+The setup consists of three application `app` servers, two highly-available http://www.haproxy.org/ load-balancers `lb`, and a management server.
 The high-availability is achieved using a `pacemaker`/`corosync` cluster http://clusterlabs.org/.
 Application deployments and system configurations are automated with https://www.ansible.com/ and monitoring is performed using https://prometheus.io/.
 
@@ -29,8 +29,8 @@ is used as the backend for an `apache` reverse proxy running on the management s
 `vagrant` port forwarding feature is used to expose the `apache` port 80 on the management server to the `vagrant` host.
 
 In a real-life scenarios, apart from separate networks handing different traffic (management, application),
-there would be no need for an `apache` reverse proxy on the management server,
-which in this setup is the SPOF (single point of failure), in addition to the obvious `vagrant` host.
+there would be no need for an `apache` reverse proxy on the management server.
+In the current setup the management server is the SPOF (single point of failure), in addition to the obvious SPOF of the `vagrant` host.
 
 
 
@@ -38,13 +38,13 @@ which in this setup is the SPOF (single point of failure), in addition to the ob
                                                  load-balancer
 
                                                -----------------
-                                               | lb1           | 
+                                               | lb1           |
                                                |               |
                                                | haproxy       |
                              Virtual IP        | node_exporter |
                          192.168.123.20/24-----| pacemaker     |
                                                | corosync      |
-                                               ----------------- 
+                                               -----------------
                                                    |       |
           Management                               |       |                              Application
             server              enp0s3 10.0.2.0/24 |       | enp0s8 192.168.123.21/24       servers
@@ -55,20 +55,20 @@ which in this setup is the SPOF (single point of failure), in addition to the ob
        | apache        |                          | Vagrant |                          | spring-boot   |
        | prometheus    | enp0s8 192.168.123.31/24 |  HOST   | enp0s8 192.168.123.1X/24 | node_exporter |
        | node_exporter |--------------------------|         |--------------------------|               |
-       | pacemaker     |                          -----------                          |               |
-       | corosync      |                           |       |                           -----------------
+       |               |                          -----------                          |               |
+       |               |                           |       |                           -----------------
        -----------------                           |       |
                                 enp0s3 10.0.2.0/24 |       | enp0s8 192.168.123.22/24
                                                    |       |
                                                    |       |
                                                -----------------
-                                               | lb2           | 
+                                               | lb2           |
                                                |               |
                                                | haproxy       |
                                                | node_exporter |
                                                | pacemaker     |
                                                | corosync      |
-                                               -----------------                                                        
+                                               -----------------
 
                                                     Passive
                                                  load-balancer
@@ -86,11 +86,11 @@ Checkout the project repo, and the external `ansible` modules:
         $ git clone https://github.com/marcindulak/vagrant-haproxy-pcs-ansible-tutorial-centos7.git
         $ cd vagrant-haproxy-pcs-ansible-tutorial-centos7
         $ cd ansible/roles/external
-        $ git clone https://github.com/styopa/ansible-pacemaker styopa.pacemaker
+        $ git clone https://github.com/marcindulak/ansible-pacemaker styopa.pacemaker
         $ # ansible-galaxy install --roles-path . -r requirements.yml  # if you have ansible on the Vagrant host
         $ cd -
 
-Install the rquired `vagrant` plugins and bring up the VMs:
+Install the required `vagrant` plugins and bring up the VMs:
 
         $ vagrant plugin install vagrant-landrush
         $ vagrant up
@@ -108,19 +108,20 @@ The `prometheus` port is also configured to be forwarded by `vagrant` and is ava
 The screenshots below show how the same API data are presented in the console and graph.
 
 ![up_console](https://raw.github.com/marcindulak/vagrant-haproxy-pcs-ansible-tutorial-centos7/master/screenshots/up_console.png)
+
 ![up_graph](https://raw.github.com/marcindulak/vagrant-haproxy-pcs-ansible-tutorial-centos7/master/screenshots/up_graph.png)
 
 For an introduction to `prometheus` see "An introduction to monitoring and alerting with time-series at scale, with Prometheus" https://www.youtube.com/watch?v=gNmWzkGViAY. `prometheus` provides it's own alerting system, but it is not configured here.
 See "PromCon 2016: Alerting in the Prometheus Universe - Fabian Reinartz" https://www.youtube.com/watch?v=yrK6z3fpu1E for more details about alerting in `prometheus`.
 
-The initial setup of the VMs and `ansible` playbook use internet downloads (one should use a local proxy instead) and most likely the initial configuration of some components will fail.
+The initial setup of the VMs and `ansible` playbook use internet downloads (one should use a local proxy of software mirrors instead) and most likely the initial configuration of some components will fail.
 Further `ansible` runs should be performed from the `mgt` server to hopefully correct the initial problems:
 
         $ vagrant ssh mgt1.mydomain -c "ansible-playbook -i /vagrant/ansible/hosts.yml /vagrant/ansible/playbook.yml"
 
 Alternatively, this `ansible` playbook could be let run by `vagrant` by:
 
-        $ vagrant provision --mgt1.mydomain
+        $ vagrant provision mgt1.mydomain
 
 The application should be accesible now on `mgt`:80 which points to the Virtual IP managed by
 the `pacemaker`/`corosync` cluster, and the corresponding port forwarded by `vagrant` to `localhost`:40080:
@@ -141,7 +142,7 @@ Due to the fact that all VMs share a single private network, the individual `app
         $ vagrant ssh mgt1.mydomain -c "curl lb1:80"
 
 Let's deploy a different (https://github.com/spring-guides/gs-testing-web) spring boot application to a subset of `app` nodes.
-First, modify the ansible playbook to point to the new application:
+First, modify the `ansible` playbook to point to the new application:
 
         $ cp -pf ansible/playbook.yml ansible/playbook.yml.rollback
         $ sed -i 's/gs-spring-boot/gs-testing-web/' ansible/playbook.yml
@@ -226,4 +227,3 @@ Todo
 --------
 Problems
 --------
-
