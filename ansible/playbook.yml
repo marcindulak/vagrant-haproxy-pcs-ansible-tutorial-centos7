@@ -2,7 +2,8 @@
   vars:
     java_package_name:               java-1.8.0-openjdk
     java_devel_package_name:         java-1.8.0-openjdk-devel
-    springboot_package_version:      b2add941bd3bddcffcf725eedb678486a9bf6bd7
+    springboot_package_version:      master
+    #springboot_package_version:      b2add941bd3bddcffcf725eedb678486a9bf6bd7  # last tested version
     springboot_package_url:          https://github.com/spring-guides/gs-spring-boot
     springboot_package_subdirectory: complete
     #springboot_package_jar:         "/vagrant/gs-spring-boot-{{ springboot_package_version }}.jar"
