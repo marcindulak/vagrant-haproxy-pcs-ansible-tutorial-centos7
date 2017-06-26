@@ -92,7 +92,7 @@ Checkout the project repo, and the external `ansible` modules:
 
 Install the required `vagrant` plugins and bring up the VMs:
 
-        $ vagrant plugin install vagrant-landrush
+        $ vagrant plugin install landrush
         $ vagrant up
         $ sleep 30  # wait for the corosync quorum
 
