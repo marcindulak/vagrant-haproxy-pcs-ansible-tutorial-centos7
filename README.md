@@ -152,6 +152,7 @@ then run the playbook on the subset of nodes (here just a single node `app1.mydo
         $ vagrant ssh mgt1.mydomain -c "ansible app1.mydomain -i /vagrant/ansible/hosts.yml -a 'systemctl stop gs-spring-boot' --become"
         $ vagrant ssh mgt1.mydomain -c "ansible app1.mydomain -i /vagrant/ansible/hosts.yml -a 'systemctl disable gs-spring-boot' --become"
         $ vagrant ssh mgt1.mydomain -c "ansible-playbook -i /vagrant/ansible/hosts.yml /vagrant/ansible/playbook.yml -l app1.mydomain"
+        $ sleep 30
 
 Verify the new application (which prints "Hello World") is deployed on the given node:
 
@@ -162,6 +163,7 @@ One could alternatively completely destroy the given `app` server and make a fre
         $ vagrant destroy -f app1.mydomain
         $ vagrant up app1.mydomain
         $ vagrant ssh mgt1.mydomain -c "ansible-playbook -i /vagrant/ansible/hosts.yml /vagrant/ansible/playbook.yml.rollback"
+        $ sleep 30
 
 Verify the old application (which prints "Greetings from Spring Boot!") is deployed on the given node:
 
