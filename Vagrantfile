@@ -38,7 +38,7 @@ Vagrant.configure(2) do |config|
           machine.vm.network :forwarded_port, guest: 80, host: 40080, id: 'app', auto_correct: false
         end
         machine.vm.provider 'virtualbox' do |provider|
-          provider.memory = 256 
+          provider.memory = 512
           provider.cpus = 1
         end
         # Base OS configuration
