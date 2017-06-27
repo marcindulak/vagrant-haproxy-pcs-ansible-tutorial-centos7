@@ -230,7 +230,3 @@ Todo
 Problems
 --------
 
-1. clean landrush settings
-
-   for h in `vagrant landrush list | awk  '{print $1}'`; do vagrant landrush rm $h; done
-   sudo killall dnsmasq
