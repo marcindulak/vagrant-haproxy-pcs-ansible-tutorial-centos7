@@ -93,7 +93,7 @@ Checkout the project repo, and the external `ansible` modules:
 Install the required `vagrant` plugins and bring up the VMs:
 
         $ vagrant plugin install landrush
-        $ vagrant up
+        $ vagrant up || :
         $ sleep 30  # wait for the corosync quorum
 
 This will start the VMs, install `ansible` on them, setup key-based authentication for the `vagrant` user used for `ansible`,

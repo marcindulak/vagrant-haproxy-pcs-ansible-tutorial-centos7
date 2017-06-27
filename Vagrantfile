@@ -51,7 +51,7 @@ Vagrant.configure(2) do |config|
         # DNS handled by landrush
         machine.landrush.enabled = true
         machine.landrush.tld = 'mydomain'
-        machine.landrush.upstream '8.8.8.8'  # landrush behaves unpredictably, sometimes DNS is not resolving
+        machine.landrush.upstream '8.8.8.8'  # landrush behaves unpredictably, sometimes DNS is not resolving, and 8.8.8. is definitely not set in /etc/resolv.conf
         machine.landrush.host_redirect_dns = false
         ansible_inventory.keys.sort.each do |dnsgroup|
           ansible_inventory[dnsgroup]['hosts'].keys.sort.each do |dnshost|

@@ -42,6 +42,7 @@
         options:
           ip:           192.168.123.20  # this is the Virtual IP
           cidr_netmask: 24
+          nic:          enp0s8
         op:
           - action:  monitor
             options:
