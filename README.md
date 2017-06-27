@@ -156,7 +156,7 @@ then run the playbook on the subset of nodes (here just a single node `app1.mydo
 
 Verify the new application (which prints "Hello World") is deployed on the given node:
 
-        $ vagrant ssh mgt1.mydomain -c "curl app1:8080"
+        $ vagrant ssh mgt1.mydomain -c "curl app1:8080" | grep "Hello World"
 
 One could alternatively completely destroy the given `app` server and make a fresh deployment. This time using the rollback playbook:
 
@@ -167,7 +167,7 @@ One could alternatively completely destroy the given `app` server and make a fre
 
 Verify the old application (which prints "Greetings from Spring Boot!") is deployed on the given node:
 
-        $ vagrant ssh mgt1.mydomain -c "curl app1:8080"
+        $ vagrant ssh mgt1.mydomain -c "curl app1:8080" | grep "Greetings from Spring Boot!"
 
 Let's simulate a failure of the active load-balancer to see whether the service continues to be available.
 
