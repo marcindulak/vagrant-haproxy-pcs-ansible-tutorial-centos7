@@ -10,7 +10,7 @@ Application deployments and system configurations are automated with https://www
 
 All servers run CentOS 7. This setup assumes a `vagrant` box with the shared folder enabled by default, mounted on the guests as `/vagrant`.
 
-The setup requires 2GB RAM.
+The setup requires 3GB RAM.
 
 Tested on:
 
