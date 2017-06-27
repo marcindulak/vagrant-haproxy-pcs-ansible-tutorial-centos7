@@ -225,6 +225,8 @@ Todo
 
 2. the template files created by ansible-galaxy init should be edited.
 
+3. there seem to be problems with the pacemaker ansible module: https://github.com/styopa/ansible-pacemaker/pull/8 https://github.com/styopa/ansible-pacemaker/issues/9 causing random failures 
+
 
 --------
 Problems
