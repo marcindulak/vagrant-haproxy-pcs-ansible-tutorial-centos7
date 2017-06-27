@@ -51,7 +51,7 @@ Vagrant.configure(2) do |config|
         # DNS handled by landrush
         machine.landrush.enabled = true
         machine.landrush.tld = 'mydomain'
-        machine.landrush.upstream '10.0.2.3'
+        machine.landrush.upstream '8.8.8.8'  # landrush behaves unpredictably, sometimes DNS is not resolving
         machine.landrush.host_redirect_dns = false
         ansible_inventory.keys.sort.each do |dnsgroup|
           ansible_inventory[dnsgroup]['hosts'].keys.sort.each do |dnshost|
@@ -61,6 +61,14 @@ Vagrant.configure(2) do |config|
         end
         # highly-available loadbalancer
         config.landrush.host 'loadbalancer.' + machine.landrush.tld, '192.168.123.20'
+        # trying to make landrush work - no idea still what is the problem
+        # https://ma.ttias.be/centos-7-networkmanager-keeps-overwriting-etcresolv-conf
+        machine.vm.provision :shell, :inline => 'if `grep "PEERDNS=yes" /etc/sysconfig/network-scripts/ifcfg-enp0s3 > /dev/null`; then sed -i "s/PEERDNS=yes/PEERDNS=no/" /etc/sysconfig/network-scripts/ifcfg-enp0s3; fi'
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1405431
+        # [main]
+        #dns=none
+        machine.vm.provision :shell, :inline => 'if ! `grep "dns=none" /etc/NetworkManager/NetworkManager.conf > /dev/null`; then sed -i "/\[main\]/adns=none" /etc/NetworkManager/NetworkManager.conf; fi'
+        machine.vm.provision :shell, :inline => 'systemctl restart NetworkManager'
         # Install ansible on all machines
         machine.vm.provision :shell, :inline => 'if ! rpm -q epel-release; then yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm; fi'
         # disable yum fastestmirror plugin
