@@ -70,7 +70,7 @@ Vagrant.configure(2) do |config|
         machine.vm.provision :shell, :inline => 'if ! `grep "dns=none" /etc/NetworkManager/NetworkManager.conf > /dev/null`; then sed -i "/\[main\]/adns=none" /etc/NetworkManager/NetworkManager.conf; fi'
         machine.vm.provision :shell, :inline => 'systemctl restart NetworkManager'
         # Install ansible on all machines
-        machine.vm.provision :shell, :inline => 'if ! rpm -q epel-release; then yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm; fi'
+        machine.vm.provision :shell, :inline => 'if ! rpm -q epel-release; then yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-10.noarch.rpm; fi'
         # disable yum fastestmirror plugin
         machine.vm.provision :shell, :inline => 'sed -i "s/^enabled=1/enabled=0/" /etc/yum/pluginconf.d/fastestmirror.conf'
         machine.vm.provision :shell, :inline => 'yum -y install ansible'
